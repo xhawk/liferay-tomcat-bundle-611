@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>fi.proactum.liferay</groupId>
+    <artifactId>liferay-tomcat-bundle-611</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Proactum flavored Liferay Tomcat bundle</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <svn.url>https://svn.proactum.fi/proactum-common/liferay-management/liferay-tomcat-bundle-611</svn.url>
+    </properties>
+
+    <scm>
+        <connection>scm:svn:https://svn.proactum.fi/proactum-common/liferay-management/liferay-tomcat-bundle-611/trunk</connection>
+        <developerConnection>scm:svn:https://svn.proactum.fi/proactum-common/liferay-management/liferay-tomcat-bundle-611/trunk</developerConnection>
+        <url>https://svn.proactum.fi/proactum-common/liferay-management/liferay-tomcat-bundle-611</url>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>repo.proactum.fi</id>
+            <name>proactum.artifactory-releases</name>
+            <url>https://repo.proactum.fi/nexus/content/repositories/releases</url>
+        </repository>
+
+        <snapshotRepository>
+            <id>repo.proactum.fi</id>
+            <name>proactum.artifactory-snapshots</name>
+            <url>https://repo.proactum.fi/nexus/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>repo.proactum.fi</id>
+            <name>proactum.artifactory-releases</name>
+            <url>https://repo.proactum.fi/nexus/content/repositories/releases</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.liferay</groupId>
+            <artifactId>liferay6-tomcat-bundle</artifactId>
+            <version>6.1.1</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>fi.proactum.liferay</groupId>
+            <artifactId>portal-impl-611</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>platform-unpack</id>
+                        <phase>compile</phase>
+                        <configuration>
+                            <target>
+                                <!-- unpack liferay-tomcat-bundle -->
+                                <unzip src="${maven.dependency.com.liferay.liferay6-tomcat-bundle.zip.path}" dest="target/unpacked" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>platform-patch</id>
+                        <phase>compile</phase>
+                        <configuration>
+                            <target>
+                                <!-- Copy patched files to their right places -->
+                                <copy todir="target/unpacked" overwrite="true" verbose="false">
+                                    <fileset dir="src/main" includes="**/*.*" />
+                                </copy>
+                                <!-- you must add here all the patched jars -->
+                                <copy file="${maven.dependency.fi.proactum.liferay.portal-impl-611.jar.path}" tofile="target/unpacked/webapps/ROOT/WEB-INF/lib/portal-impl.jar" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>platform-pack</id>
+                        <phase>compile</phase>
+                        <configuration>
+                            <target>
+                                <!-- pack patched liferay-tomcat-bundle -->
+                                <zip basedir="target/unpacked" destfile="target/liferay-tomcat-bundle.zip" />
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>create-artifact</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>target/liferay-tomcat-bundle.zip</file>
+                                    <type>zip</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.2.1</version>
+                <configuration>
+                    <tagBase>${svn.url}/releases</tagBase>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
